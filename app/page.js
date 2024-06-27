@@ -152,7 +152,7 @@ const Page = () => {
     ))
   ) : (
     <tr>
-      <td colSpan="6" className="text-center font-bold text-xl ">No tasks available</td>
+      <td colSpan="8" className="text-center font-bold text-xl">No tasks available</td>
     </tr>
   );
 
@@ -236,7 +236,7 @@ const Page = () => {
         </div>
       </form>
 
-      <div className="max-w mx-2">
+      <div className="max-w mx-2 overflow-x-auto">
         <table className="min-w-full bg-white border rounded-lg shadow-lg">
           <thead className="bg-gray-200">
             <tr className="text-left">

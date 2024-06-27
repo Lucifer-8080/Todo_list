@@ -1,11 +1,11 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faHeading, faAlignLeft, faExclamationCircle, faCalendarAlt, faTags } from '@fortawesome/free-solid-svg-icons';
-import './globals.css'; // Import custom CSS
+import { faHeading, faAlignLeft, faTags } from '@fortawesome/free-solid-svg-icons';
+import { motion, AnimatePresence } from "framer-motion";
+import './globals.css';
 
 const Page = () => {
-  // State variables
   const [title, setTitle] = useState("");
   const [desc, setDesc] = useState("");
   const [priority, setPriority] = useState("Low");
@@ -16,7 +16,6 @@ const Page = () => {
   const [currentTaskIndex, setCurrentTaskIndex] = useState(null);
   const [error, setError] = useState("");
 
-  // Load tasks from localStorage when the component mounts
   useEffect(() => {
     const savedTasks = JSON.parse(localStorage.getItem("tasks"));
     if (savedTasks) {
@@ -24,16 +23,13 @@ const Page = () => {
     }
   }, []);
 
-  // Save tasks to localStorage whenever mainTask changes
   useEffect(() => {
     localStorage.setItem("tasks", JSON.stringify(mainTask));
   }, [mainTask]);
 
-  // Handle form submission
   const submitHandler = (e) => {
     e.preventDefault();
 
-    // Input validation
     if (!title.trim()) {
       setError("Title cannot be blank");
       return;
@@ -59,7 +55,6 @@ const Page = () => {
       return;
     }
 
-    // Update existing task or add a new task
     if (isEditing) {
       const updatedTasks = mainTask.map((task, index) =>
         index === currentTaskIndex
@@ -73,7 +68,6 @@ const Page = () => {
       setMainTask([...mainTask, { title, desc, priority, dueDate, category, completed: false }]);
     }
 
-    // Reset form fields
     setTitle("");
     setDesc("");
     setPriority("Low");
@@ -82,14 +76,12 @@ const Page = () => {
     setError("");
   };
 
-  // Handle task deletion
   const deleteHandler = (i) => {
     let copyTask = [...mainTask];
     copyTask.splice(i, 1);
     setMainTask(copyTask);
   };
 
-  // Handle task editing
   const editHandler = (i) => {
     const task = mainTask[i];
     setTitle(task.title);
@@ -101,7 +93,6 @@ const Page = () => {
     setCurrentTaskIndex(i);
   };
 
-  // Toggle task completion status
   const toggleCompletion = (i) => {
     const updatedTasks = mainTask.map((task, index) =>
       index === i ? { ...task, completed: !task.completed } : task
@@ -109,58 +100,71 @@ const Page = () => {
     setMainTask(updatedTasks);
   };
 
-  // Render tasks in tabular format
-  let renderTask = (
+  const renderTask = mainTask.length > 0 ? (
+    mainTask.map((t, i) => (
+      <AnimatePresence key={i}>
+        <motion.tr
+          className="border-b border-gray-200"
+          initial={{ x: -100, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          exit={{ x: 100, opacity: 0 }}
+        >
+          <td className="p-3">
+            <motion.input
+              type="checkbox"
+              checked={t.completed}
+              onChange={() => toggleCompletion(i)}
+              className="h-6 w-6"
+              aria-label={`Mark task "${t.title}" as completed`}
+              whileTap={{ scale: 0.9 }}
+            />
+          </td>
+          <td className="p-3">{t.title}</td>
+          <td className="p-3">{t.desc}</td>
+          <td className="p-3">{t.priority}</td>
+          <td className="p-3">{t.dueDate}</td>
+          <td className="p-3">{t.category}</td>
+          <td className="p-3">
+            <span className={`font-semibold ${t.completed ? "text-green-500" : "text-red-500"}`}>
+              {t.completed ? "Completed" : "Pending"}
+            </span>
+          </td>
+          <td className="flex p-3">
+            <motion.button
+              className="font-bold text-white shadow-lg hover:scale-110 rounded-xl transition-all duration-500 bg-gradient-to-t to-amber-300 via-black from-red-600 bg-size-200 hover:bg-left-bottom cursor-pointer sm:m-2 m-1 p-3"
+              onClick={() => editHandler(i)}
+              aria-label={`Edit task "${t.title}"`}
+              whileHover={{ scale: 1.1 }}
+            >
+              Edit
+            </motion.button>
+            <motion.button
+              className="font-bold text-white shadow-lg hover:scale-110 rounded-xl transition-all duration-500 bg-gradient-to-t to-lime-400 via-black from-red-500 bg-size-200 hover:bg-right-bottom cursor-pointer sm:m-2 m-1 p-3"
+              onClick={() => deleteHandler(i)}
+              aria-label={`Delete task "${t.title}"`}
+              whileHover={{ scale: 1.1 }}
+            >
+              Delete
+            </motion.button>
+          </td>
+        </motion.tr>
+      </AnimatePresence>
+    ))
+  ) : (
     <tr>
-      <td colSpan="6" className="text-center">No tasks available</td>
+      <td colSpan="6" className="text-center font-bold text-xl ">No tasks available</td>
     </tr>
   );
 
-  if (mainTask.length > 0) {
-    renderTask = mainTask.map((t, i) => (
-      <tr key={i} className="border-b border-gray-200">
-        <td className="p-3">
-          <input
-            type="checkbox"
-            checked={t.completed}
-            onChange={() => toggleCompletion(i)}
-            className="h-6 w-6"
-            aria-label={`Mark task "${t.title}" as completed`}
-          />
-        </td>
-        <td className="p-3">{t.title}</td>
-        <td className="p-3">{t.desc}</td>
-        <td className="p-3">{t.priority}</td>
-        <td className="p-3">{t.dueDate}</td>
-        <td className="p-3">{t.category}</td>
-        <td className="p-3">
-          <span className={`font-semibold ${t.completed ? "text-green-500" : "text-red-500"}`}>
-            {t.completed ? "Completed" : "Pending"}
-          </span>
-        </td>
-        <td className="flex p-3">
-          <button
-            className="font-bold text-white shadow-lg hover:scale-110 rounded-xl transition-all duration-500 bg-gradient-to-t to-amber-300 via-black from-red-600 bg-size-200 hover:bg-left-bottom cursor-pointer sm:m-2 m-1 p-3"
-            onClick={() => editHandler(i)}
-            aria-label={`Edit task "${t.title}"`}
-          >
-            Edit
-          </button>
-          <button
-            className=" font-bold text-white shadow-lg hover:scale-110 rounded-xl transition-all duration-500 bg-gradient-to-t to-lime-400 via-black from-red-500 bg-size-200 hover:bg-right-bottom cursor-pointer sm:m-2 m-1 p-3"
-            onClick={() => deleteHandler(i)}
-            aria-label={`Delete task "${t.title}"`}
-          >
-            Delete
-          </button>
-        </td>
-      </tr>
-    ));
-  }
-
   return (
     <>
-  <h1 className=" items-center text-center text-4xl sm:text-4xl font-extrabold dark:text-white bg-black p-4">My<span className="bg-blue-100 text-blue-800 text-2xl font-semibold me-2 px-2.5 py-0.5 rounded dark:bg-blue-200 dark:text-blue-800 ms-2">Todo</span><span >List</span></h1>
+      <h1 className="items-center text-center text-4xl sm:text-4xl font-extrabold dark:text-white bg-black p-4">
+        My
+        <span className="bg-blue-100 text-blue-800 text-2xl font-semibold me-2 px-2.5 py-0.5 rounded dark:bg-blue-200 dark:text-blue-800 ms-2">
+          Todo
+        </span>
+        <span>List</span>
+      </h1>
 
       <form className="max-w-7.5xl mx-auto border rounded-lg p-4 mb-8 shadow-sm">
         {error && <p className="text-red-500 mb-2">{error}</p>}
@@ -220,18 +224,19 @@ const Page = () => {
             <FontAwesomeIcon icon={faTags} className="absolute right-3 top-3 text-gray-400" />
           </div>
         </div>
-        <div className=" mx-25">
-             <button
-          type="submit"
-          className="sm:ml-25 sm:m-2 p-4 shadow-lg hover:scale-110 text-white rounded-xl transition-all duration-500 bg-gradient-to-br to-white via-black from-red-600 bg-size-200 hover:bg-right-bottom  font-bold"
-          onClick={submitHandler}
-        >
-          {isEditing ? "Update Task" : "Add Task"}
-        </button>
+        <div className="mx-25">
+          <motion.button
+            type="submit"
+            className="sm:ml-25 sm:m-2 p-4 shadow-lg hover:scale-110 text-white rounded-xl transition-all duration-500 bg-gradient-to-br to-white via-black from-red-600 bg-size-200 hover:bg-right-bottom font-bold"
+            onClick={submitHandler}
+            whileHover={{ scale: 1.05 }}
+          >
+            {isEditing ? "Update Task" : "Add Task"}
+          </motion.button>
         </div>
       </form>
 
-      <div className="max-w mx-2 ">
+      <div className="max-w mx-2">
         <table className="min-w-full bg-white border rounded-lg shadow-lg">
           <thead className="bg-gray-200">
             <tr className="text-left">
@@ -246,7 +251,7 @@ const Page = () => {
             </tr>
           </thead>
           <tbody>
-            {renderTask}
+            <AnimatePresence>{renderTask}</AnimatePresence>
           </tbody>
         </table>
       </div>
